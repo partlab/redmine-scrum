@@ -1,0 +1,15 @@
+production:
+  adapter:  mysql2
+  database: <%= ENV['DATABASE'] %>
+  host:     <%= ENV['DATABASE_HOST'] %>
+  username: <%= ENV['DATABASE_USERNAME'] %>
+  password: <%= ENV['DATABASE_PASSWORD'] %>
+  encoding: utf8
+
+development:
+  adapter: mysql2
+  database: <%= ENV['DATABASE'] %>
+  host:     <%= ENV['HOST'] %>
+  username: <%= ENV['USERNAME'] %>
+  password: <%= ENV['PASSWORD'] %>
+  encoding: utf8

@@ -1,0 +1,14 @@
+group :development do
+  gem 'better_errors'
+  gem 'capistrano'
+  gem 'capistrano-rails'
+  gem 'capistrano-ext'
+  gem 'capistrano-rvm'
+  gem 'net-ssh', '~> 2.7.0'
+end
+
+group :production do
+  gem 'unicorn'
+end
+
+gem 'dotenv-rails', :groups => [:development, :test, :production]
