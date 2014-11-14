@@ -1,1 +1,1 @@
-RedmineApp::Application.config.secret_token = "#{ENV['SECRET_TOKEN']}"
+RedmineApp::Application.config.secret_token = "f686c2e98e9f4a35aba208fccea78f7fcf32a0e21eab92ca23d67d6846e394c5a15c42b56b5bd7e718cf8257e5683a56f4135e42e1f5511bca01660bf4bcecd1"
