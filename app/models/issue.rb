@@ -33,7 +33,7 @@ class Issue < ActiveRecord::Base
   has_many :visible_journals,
     :class_name => 'Journal',
     :as => :journalized,
-    :conditions => Proc.new { 
+    :conditions => Proc.new {
       ["(#{Journal.table_name}.private_notes = ? OR (#{Project.allowed_to_condition(User.current, :view_private_notes)}))", false]
     },
     :readonly => true
@@ -94,7 +94,7 @@ class Issue < ActiveRecord::Base
   before_create :default_assign
   before_save :close_duplicates, :update_done_ratio_from_issue_status,
               :force_updated_on_change, :update_closed_on, :set_assigned_to_was
-  after_save {|issue| issue.send :after_project_change if !issue.id_changed? && issue.project_id_changed?} 
+  after_save {|issue| issue.send :after_project_change if !issue.id_changed? && issue.project_id_changed?}
   after_save :reschedule_following_issues, :update_nested_set_attributes,
              :update_parent_attributes, :create_journal
   # Should be after_create but would be called before previous after_save callbacks
@@ -218,7 +218,7 @@ class Issue < ActiveRecord::Base
     self.status = issue.status
     self.author = User.current
     unless options[:attachments] == false
-      self.attachments = issue.attachments.map do |attachement| 
+      self.attachments = issue.attachments.map do |attachement|
         attachement.copy(:container => self)
       end
     end
@@ -394,10 +394,10 @@ class Issue < ActiveRecord::Base
     :if => lambda {|issue, user| user.allowed_to?(:add_issue_notes, issue.project)}
 
   safe_attributes 'private_notes',
-    :if => lambda {|issue, user| !issue.new_record? && user.allowed_to?(:set_notes_private, issue.project)} 
+    :if => lambda {|issue, user| !issue.new_record? && user.allowed_to?(:set_notes_private, issue.project)}
 
   safe_attributes 'watcher_user_ids',
-    :if => lambda {|issue, user| issue.new_record? && user.allowed_to?(:add_issue_watchers, issue.project)} 
+    :if => lambda {|issue, user| issue.new_record? && user.allowed_to?(:add_issue_watchers, issue.project)}
 
   safe_attributes 'is_private',
     :if => lambda {|issue, user|
@@ -529,7 +529,7 @@ class Issue < ActiveRecord::Base
     return {} if roles.empty?
 
     result = {}
-    workflow_permissions = WorkflowPermission.where(:tracker_id => tracker_id, :old_status_id => status_id, :role_id => roles.map(&:id)).all
+    workflow_permissions = WorkflowPermission.where(:tracker_id => tracker_id, :old_status_id => status_id, :role_id => roles.map(&:id))
     if workflow_permissions.any?
       workflow_rules = workflow_permissions.inject({}) do |h, wp|
         h[wp.field_name] ||= []
@@ -767,7 +767,7 @@ class Issue < ActiveRecord::Base
       initial_status ||= status
 
       initial_assigned_to_id = assigned_to_id_changed? ? assigned_to_id_was : assigned_to_id
-      assignee_transitions_allowed = initial_assigned_to_id.present? && 
+      assignee_transitions_allowed = initial_assigned_to_id.present? &&
         (user.id == initial_assigned_to_id || user.group_ids.include?(initial_assigned_to_id))
 
       statuses = initial_status.find_new_statuses_allowed_to(
@@ -1061,7 +1061,7 @@ class Issue < ActiveRecord::Base
         if leaf.start_date
           # Only move subtask if it starts at the same date as the parent
           # or if it starts before the given date
-          if start_date == leaf.start_date || date > leaf.start_date 
+          if start_date == leaf.start_date || date > leaf.start_date
             leaf.reschedule_on!(date)
           end
         else
@@ -1112,13 +1112,15 @@ class Issue < ActiveRecord::Base
   def self.update_versions_from_hierarchy_change(project)
     moved_project_ids = project.self_and_descendants.reload.collect(&:id)
     # Update issues of the moved projects and issues assigned to a version of a moved project
-    Issue.update_versions(["#{Version.table_name}.project_id IN (?) OR #{Issue.table_name}.project_id IN (?)", moved_project_ids, moved_project_ids])
+    Issue.update_versions(
+            ["#{Version.table_name}.project_id IN (?) OR #{Issue.table_name}.project_id IN (?)",
+             moved_project_ids, moved_project_ids]
+          )
   end
 
   def parent_issue_id=(arg)
     s = arg.to_s.strip.presence
     if s && (m = s.match(%r{\A#?(\d+)\z})) && (@parent_issue = Issue.find_by_id(m[1]))
-      @parent_issue.id
       @invalid_parent_issue_id = nil
     elsif s.blank?
       @parent_issue = nil
@@ -1155,6 +1157,28 @@ class Issue < ActiveRecord::Base
       issue.project.is_or_is_ancestor_of?(project)
     else
       false
+    end
+  end
+
+  # Returns an issue scope based on project and scope
+  def self.cross_project_scope(project, scope=nil)
+    if project.nil?
+      return Issue
+    end
+    case scope
+    when 'all', 'system'
+      Issue
+    when 'tree'
+      Issue.joins(:project).where("(#{Project.table_name}.lft >= :lft AND #{Project.table_name}.rgt <= :rgt)",
+                                  :lft => project.root.lft, :rgt => project.root.rgt)
+    when 'hierarchy'
+      Issue.joins(:project).where("(#{Project.table_name}.lft >= :lft AND #{Project.table_name}.rgt <= :rgt) OR (#{Project.table_name}.lft < :lft AND #{Project.table_name}.rgt > :rgt)",
+                                  :lft => project.lft, :rgt => project.rgt)
+    when 'descendants'
+      Issue.joins(:project).where("(#{Project.table_name}.lft >= :lft AND #{Project.table_name}.rgt <= :rgt)",
+                                  :lft => project.lft, :rgt => project.rgt)
+    else
+      Issue.where(:project_id => project.id)
     end
   end
 
@@ -1196,13 +1220,13 @@ class Issue < ActiveRecord::Base
   end
 
   def self.by_subproject(project)
-    ActiveRecord::Base.connection.select_all("select    s.id as status_id, 
-                                                s.is_closed as closed, 
+    ActiveRecord::Base.connection.select_all("select    s.id as status_id,
+                                                s.is_closed as closed,
                                                 #{Issue.table_name}.project_id as project_id,
-                                                count(#{Issue.table_name}.id) as total 
-                                              from 
+                                                count(#{Issue.table_name}.id) as total
+                                              from
                                                 #{Issue.table_name}, #{Project.table_name}, #{IssueStatus.table_name} s
-                                              where 
+                                              where
                                                 #{Issue.table_name}.status_id=s.id
                                                 and #{Issue.table_name}.project_id = #{Project.table_name}.id
                                                 and #{visible_condition(User.current, :project => project, :with_subprojects => true)}
@@ -1292,9 +1316,7 @@ class Issue < ActiveRecord::Base
     if root_id.nil?
       # issue was just created
       self.root_id = (@parent_issue.nil? ? id : @parent_issue.root_id)
-      set_default_left_and_right
-      Issue.where(["id = ?", id]).
-        update_all(["root_id = ?, lft = ?, rgt = ?", root_id, lft, rgt])
+      Issue.where(["id = ?", id]).update_all(["root_id = ?", root_id])
       if @parent_issue
         move_to_child_of(@parent_issue)
       end
@@ -1317,13 +1339,16 @@ class Issue < ActiveRecord::Base
         move_to_right_of(root)
       end
       old_root_id = root_id
-      self.root_id = (@parent_issue.nil? ? id : @parent_issue.root_id )
-      target_maxright = nested_set_scope.maximum(right_column_name) || 0
-      offset = target_maxright + 1 - lft
-      Issue.where(["root_id = ? AND lft >= ? AND rgt <= ? ", old_root_id, lft, rgt]).
-        update_all(["root_id = ?, lft = lft + ?, rgt = rgt + ?", root_id, offset, offset])
-      self[left_column_name] = lft + offset
-      self[right_column_name] = rgt + offset
+      in_tenacious_transaction do
+        @parent_issue.reload_nested_set if @parent_issue
+        self.reload_nested_set
+        self.root_id = (@parent_issue.nil? ? id : @parent_issue.root_id)
+        cond = ["root_id = ? AND lft >= ? AND rgt <= ? ", old_root_id, lft, rgt]
+        self.class.base_class.select('id').lock(true).where(cond)
+        offset = right_most_bound + 1 - lft
+        Issue.where(cond).
+          update_all(["root_id = ?, lft = lft + ?, rgt = rgt + ?", root_id, offset, offset])
+      end
       if @parent_issue
         move_to_child_of(@parent_issue)
       end
@@ -1435,7 +1460,7 @@ class Issue < ActiveRecord::Base
   def close_duplicates
     if closing?
       duplicates.each do |duplicate|
-        # Reload is need in case the duplicate was updated by a previous duplicate
+        # Reload is needed in case the duplicate was updated by a previous duplicate
         duplicate.reload
         # Don't re-close it if it's already closed
         next if duplicate.closed?
@@ -1490,11 +1515,11 @@ class Issue < ActiveRecord::Base
           before = @custom_values_before_change[c.custom_field_id]
           after = c.value
           next if before == after || (before.blank? && after.blank?)
-          
+
           if before.is_a?(Array) || after.is_a?(Array)
             before = [before] unless before.is_a?(Array)
             after = [after] unless after.is_a?(Array)
-            
+
             # values removed
             (before - after).reject(&:blank?).each do |value|
               @current_journal.details << JournalDetail.new(:property => 'cf',
@@ -1555,14 +1580,14 @@ class Issue < ActiveRecord::Base
 
     where = "#{Issue.table_name}.#{select_field}=j.id"
 
-    ActiveRecord::Base.connection.select_all("select    s.id as status_id, 
-                                                s.is_closed as closed, 
+    ActiveRecord::Base.connection.select_all("select    s.id as status_id,
+                                                s.is_closed as closed,
                                                 j.id as #{select_field},
-                                                count(#{Issue.table_name}.id) as total 
-                                              from 
+                                                count(#{Issue.table_name}.id) as total
+                                              from
                                                   #{Issue.table_name}, #{Project.table_name}, #{IssueStatus.table_name} s, #{joins} j
-                                              where 
-                                                #{Issue.table_name}.status_id=s.id 
+                                              where
+                                                #{Issue.table_name}.status_id=s.id
                                                 and #{where}
                                                 and #{Issue.table_name}.project_id=#{Project.table_name}.id
                                                 and #{visible_condition(User.current, :project => project)}

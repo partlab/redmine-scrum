@@ -5,6 +5,11 @@
 @import url(color_tasks.css);
 @import url(DMSF.css);
 @import url(buttons.css);
+@import url(forum.css);
+@import url(news.css);
+@import url(pagination.css);
+@import url(redminebacklogs.css);
+@import url(activity.css);
 
 html{
   overflow-x: hidden;
@@ -235,6 +240,14 @@ div.flash.error, #errorExplanation{
 div.flash.error, #errorExplanation ul{
   margin: 2px;
 }
+p.nodata{
+  border: none;
+  border-left: 20px solid #FDBF3B;
+  background: none;
+  background-color: #FFEBC1;
+  padding-left: 10px;
+  border-radius: 4px;
+}
 /*==========CALENDAR==========*/
 #ui-datepicker-div{
   padding: 0;
@@ -252,7 +265,8 @@ div.flash.error, #errorExplanation ul{
 .ui-datepicker table .ui-datepicker-week-col{
   padding-left: 20px;
 }
-#s2id_project_quick_jump_box, #project_quick_jump_box{
+#s2id_project_quick_jump_box, #project_quick_jump_box,
+.select2-drop.select2-with-searchbox.select2-drop-active{
   position: fixed;
   top: 10px;
   right: 10px;
@@ -293,12 +307,6 @@ select {
 tr.time-entry {
   white-space: normal !important;
 }
-/*=========== FORUM ============*/
-table.list.messages td{ height: 40px; vertical-align: middle; }
-table.list.messages td.subject { background-position: left center; }
-table.list.messages td.author { font-size: 1em; }
-tr.message td.last_message { font-size: 100%; }
-
 /*=========== LOGO ============*/
 .redmine-logo{
   margin: auto;
@@ -308,3 +316,11 @@ tr.message td.last_message { font-size: 100%; }
   background-size: 200px;
   background-repeat: no-repeat;
 }
+/*=========== RedmineCRM ======*/
+/* TODO: Find a way rewrite it */
+select[onchange="if (this.value != '') { window.location = this.value; }"]{
+  position: fixed;
+  top: 17px;
+  right: 10px;
+}
+

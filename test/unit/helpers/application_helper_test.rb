@@ -26,6 +26,7 @@ class ApplicationHelperTest < ActionView::TestCase
 
   fixtures :projects, :roles, :enabled_modules, :users,
            :repositories, :changesets,
+           :projects_trackers,
            :trackers, :issue_statuses, :issues, :versions, :documents,
            :wikis, :wiki_pages, :wiki_contents,
            :boards, :messages, :news,
@@ -713,7 +714,7 @@ RAW
           link_to("Unknown page",
                   "/projects/onlinestore/wiki/Unknown_page",
                   :class => "wiki-page new"),
-      # striked through link
+      # struck through link
       '-[[Another page|Page]]-' =>
           "<del>".html_safe +
             link_to("Page",

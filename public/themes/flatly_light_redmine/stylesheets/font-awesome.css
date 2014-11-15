@@ -11,9 +11,8 @@
   font-weight: normal;
   font-style: normal;
 }
-a.icon{ font-family: 'Lato', Helvetika, Calibri, Arial, sans-serif; }
 .icon:before{ font-family: FontAwesome; }
-.fa, form .icon, .icon {
+.fa, form .icon, .icon{
   display: inline-block;
   font-family: FontAwesome;
   font-style: normal;
@@ -24,7 +23,16 @@ a.icon{ font-family: 'Lato', Helvetika, Calibri, Arial, sans-serif; }
   background: none !important;
   padding-left: 10px;
 }
-a.icon{ text-decoration: none; }
+#context-menu li>a{
+  font-family: 'Lato', Helvetika, Calibri, Arial, sans-serif;
+}
+#context-menu li>a:before{
+  content: none;
+}
+a.icon{
+  text-decoration: none;
+  font-family: 'Lato', Helvetika, Calibri, Arial, sans-serif;
+}
 .icon:before{ color: #4CBAC1; }
 .fa:before, .icon:before{
   margin-right: 3px;
@@ -540,7 +548,8 @@ a.icon{ text-decoration: none; }
 .fa-random:before {
   content: "\f074";
 }
-.fa-comment:before {
+.fa-comment:before,
+.icon-comment:before {
   content: "\f075";
 }
 .fa-magnet:before {
@@ -816,7 +825,8 @@ a.icon{ text-decoration: none; }
   content: "\f0dc";
 }
 .fa-sort-down:before,
-.fa-sort-desc:before {
+.fa-sort-desc:before,
+.ui-icon-carat-1-s:before {
   content: "\f0dd";
 }
 .fa-sort-up:before,
@@ -1215,7 +1225,8 @@ a.icon{ text-decoration: none; }
 .fa-sort-numeric-desc:before {
   content: "\f163";
 }
-.fa-thumbs-up:before {
+.fa-thumbs-up:before,
+.icon-unvote:before {
   content: "\f164";
 }
 .fa-thumbs-down:before {

@@ -94,14 +94,14 @@ class Member < ActiveRecord::Base
   end
 
   def set_issue_category_nil
-    if user
+    if user_id && project_id
       # remove category based auto assignments for this member
-      IssueCategory.where(["project_id = ? AND assigned_to_id = ?", project.id, user.id]).
+      IssueCategory.where(["project_id = ? AND assigned_to_id = ?", project_id, user_id]).
         update_all("assigned_to_id = NULL")
     end
   end
 
-  # Find or initilize a Member with an id, attributes, and for a Principal
+  # Find or initialize a Member with an id, attributes, and for a Principal
   def self.edit_membership(id, new_attributes, principal=nil)
     @membership = id.present? ? Member.find(id) : Member.new(:principal => principal)
     @membership.attributes = new_attributes

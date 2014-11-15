@@ -50,6 +50,8 @@ module Redmine #:nodoc:
     self.public_directory = File.join(Rails.root, 'public', 'plugin_assets')
 
     @registered_plugins = {}
+    @used_partials = {}
+
     class << self
       attr_reader :registered_plugins
       private :new
@@ -93,6 +95,15 @@ module Redmine #:nodoc:
         ActiveSupport::Dependencies.autoload_paths += [dir]
       end
 
+      # Warn for potential settings[:partial] collisions
+      if p.configurable?
+        partial = p.settings[:partial]
+        if @used_partials[partial]
+          Rails.logger.warn "WARNING: settings partial '#{partial}' is declared in '#{p.id}' plugin but it is already used by plugin '#{@used_partials[partial]}'. Only one settings view will be used. You may want to contact those plugins authors to fix this."
+        end
+        @used_partials[partial] = p.id
+      end
+
       registered_plugins[id] = p
     end
 
@@ -111,6 +122,12 @@ module Redmine #:nodoc:
     # It doesn't unload installed plugins
     def self.clear
       @registered_plugins = {}
+    end
+
+    # Removes a plugin from the registered plugins
+    # It doesn't unload the plugin
+    def self.unregister(id)
+      @registered_plugins.delete(id)
     end
 
     # Checks if a plugin is installed
@@ -325,7 +342,7 @@ module Redmine #:nodoc:
     # Associated model(s) must implement the find_events class method.
     # ActiveRecord models can use acts_as_activity_provider as a way to implement this class method.
     #
-    # The following call should return all the scrum events visible by current user that occured in the 5 last days:
+    # The following call should return all the scrum events visible by current user that occurred in the 5 last days:
     #   Meeting.find_events('scrums', User.current, 5.days.ago, Date.today)
     #   Meeting.find_events('scrums', User.current, 5.days.ago, Date.today, :project => foo) # events for project foo only
     #

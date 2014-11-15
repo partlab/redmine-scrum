@@ -39,8 +39,6 @@ class ProjectNestedSetTest < ActiveSupport::TestCase
     @b1.set_parent!(@b)
     @b11 = Project.create!(:name => 'B11', :identifier => 'projectb11')
     @b11.set_parent!(@b1)
-
-    @a, @a1, @a2, @b, @b1, @b11, @b2, @c, @c1 = *(Project.all.sort_by(&:name))
   end
 
   def test_valid_tree
@@ -176,7 +174,7 @@ class ProjectNestedSetTest < ActiveSupport::TestCase
     projects.each do |project|
       if project.children.any?
         # sibling projects sorted alphabetically
-        assert_equal project.children.map(&:name).sort, project.children.order('lft').map(&:name), "Project #{project.name}'s children were not properly sorted"
+        assert_equal project.children.map(&:name).sort, project.children.sort_by(&:lft).map(&:name), "Project #{project.name}'s children were not properly sorted"
       end
     end
   end
