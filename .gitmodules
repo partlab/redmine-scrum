@@ -1,0 +1,6 @@
+[submodule "plugins/redmine-slack"]
+	path = plugins/redmine-slack
+	url = https://github.com/sciyoshi/redmine-slack.git
+[submodule "plugins/redmine_github_hook"]
+	path = plugins/redmine_github_hook
+	url = https://github.com/koppen/redmine_github_hook.git
