@@ -4,3 +4,6 @@
 [submodule "plugins/redmine_github_hook"]
 	path = plugins/redmine_github_hook
 	url = https://github.com/koppen/redmine_github_hook.git
+[submodule "plugins/redmine_code_review"]
+	path = plugins/redmine_code_review
+	url = https://github.com/planio-gmbh/redmine_code_review.git
